@@ -161,7 +161,8 @@ function login(username, password)
                 return;
             }      
 
-            socket.write(Buffer.from(`<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`))
+
+            startStream();
 
             socket.once("data", _=>
             {
@@ -192,6 +193,12 @@ function login(username, password)
 }
 
 
+
+function startStream()
+{
+    socket.write(Buffer.from(`<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`))
+    return new Promise(resolve => eventEmitter.once("stream", resolve));
+}
 
 function askForJid()
 {   
