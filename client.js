@@ -100,7 +100,7 @@ rl.on("line", str=>
 });
 
 
-function login(username, password)
+async function login(username, password)
 {
     console.log("\u001b[33mlogging in as "+ username + "...\u001b[0m");
 
@@ -110,7 +110,7 @@ function login(username, password)
 
     var message = `<auth xmlns="urn:ietf:params:xml:ns:xmpp-sasl" mechanism="SCRAM-SHA-1">${Buffer.from(str).toString("base64")}</auth>`;
 
-    eventEmitter.once("challenge", args=>
+    eventEmitter.once("challenge", async args=>
     {
         let challenge = args[1];
         let decoded = Buffer.from(challenge,"base64").toString();
@@ -143,7 +143,7 @@ function login(username, password)
   
         let message2 = `<response xmlns="urn:ietf:params:xml:ns:xmpp-sasl">${Buffer.from(response).toString("base64")}</response>`;
 
-        eventEmitter.once("success", args=>
+        eventEmitter.once("success", async args=>
         {
             let {v} = parseKeyValuePairs(Buffer.from(args[1],"base64").toString())
             
@@ -163,23 +163,14 @@ function login(username, password)
             }      
 
 
-            startStream();
+            await startStream();
+            await bindResource(resource);
 
-            socket.once("data", _=>
-            {
-                bindResource(resource);
+            friends.push(`${username}@${host}/${resource}`);
 
-                socket.once("data", _=>
-                {
-
-                    friends.push(`${username}@${host}/${resource}`)
-                    socket.write(Buffer.from(`<iq to='${host}' type='set' id='sess_1'>
-                <session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>
-                </iq>`))
-
-                })
-            })
-            
+                socket.write(Buffer.from(`<iq to='${host}' type='set' id='sess_1'>
+            <session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>
+            </iq>`)); 
 
         })
 
@@ -200,7 +191,7 @@ function startStream()
     var str = `<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`;
     return new Promise(resolve =>
     {
-        eventEmitter.once("stream", resolve);
+        socket.once("data", resolve);
         socket.write(Buffer.from(str));
     });
 }
@@ -208,9 +199,9 @@ function startStream()
 function bindResource(resource)
 {
     var str = `<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>${resource}</resource></bind></iq>`;
-    return new Promise((resolve,reject) => 
+    return new Promise(resolve => 
     {
-        eventEmitter.once("iq", args => {if(args[0].type == "result" && args[0].id == "_xmpp_bind1") resolve(); else reject();});
+        socket.once("data", resolve)
         socket.write(Buffer.from(str));
     })
 }
