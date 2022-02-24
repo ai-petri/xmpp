@@ -146,8 +146,20 @@ function login(username, password)
         {
             let {v} = parseKeyValuePairs(Buffer.from(args[1],"base64").toString())
             
+            let serverKey = crypto.createHmac("sha1", saltedPassword).update("Server Key").digest();
 
-            console.log("\u001b[32msuccess!\u001b[0m");
+            let serverSignature = crypto.createHmac("sha1", serverKey).update(authMessage).digest();
+
+            if(v == serverSignature.toString("base64"))
+            {
+                console.log("\u001b[32msuccess!\u001b[0m");
+            }
+            else
+            {
+                console.error("\u001b[31msignature verification failed\u001b[0m");
+                socket.end();
+                return;
+            }      
 
             socket.write(Buffer.from(`<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`))
 
