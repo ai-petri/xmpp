@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const {performance} = require('perf_hooks');
 
 const {parseXML, parseKeyValuePairs} = require("./parse");
+const { rejects } = require("assert");
 
 
 var username = "";
@@ -166,8 +167,8 @@ function login(username, password)
 
             socket.once("data", _=>
             {
-                socket.write(Buffer.from(`<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>${resource}</resource></bind></iq>`))
-                
+                bindResource(resource);
+
                 socket.once("data", _=>
                 {
 
@@ -196,8 +197,22 @@ function login(username, password)
 
 function startStream()
 {
-    socket.write(Buffer.from(`<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`))
-    return new Promise(resolve => eventEmitter.once("stream", resolve));
+    var str = `<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`;
+    return new Promise(resolve =>
+    {
+        eventEmitter.once("stream", resolve);
+        socket.write(Buffer.from(str));
+    });
+}
+
+function bindResource(resource)
+{
+    var str = `<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>${resource}</resource></bind></iq>`;
+    return new Promise((resolve,reject) => 
+    {
+        eventEmitter.once("iq", args => {if(args[0].type == "result" && args[0].id == "_xmpp_bind1") resolve(); else reject();});
+        socket.write(Buffer.from(str));
+    })
 }
 
 function askForJid()
