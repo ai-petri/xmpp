@@ -168,9 +168,7 @@ async function login(username, password)
 
             friends.push(`${username}@${host}/${resource}`);
 
-                socket.write(Buffer.from(`<iq to='${host}' type='set' id='sess_1'>
-            <session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>
-            </iq>`)); 
+            await startSession();
 
         })
 
@@ -196,12 +194,22 @@ function startStream()
     });
 }
 
+function startSession()
+{
+    var str = `<iq to='${host}' type='set' id='sess_1'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>`;
+    return new Promise(resolve => 
+    {
+        socket.once("data", resolve);
+        socket.write(Buffer.from(str));
+    })
+}
+
 function bindResource(resource)
 {
     var str = `<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>${resource}</resource></bind></iq>`;
     return new Promise(resolve => 
     {
-        socket.once("data", resolve)
+        socket.once("data", resolve);
         socket.write(Buffer.from(str));
     })
 }
