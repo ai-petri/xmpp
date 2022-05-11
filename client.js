@@ -158,6 +158,7 @@ async function login(username, password)
             else
             {
                 console.error("\u001b[31msignature verification failed\u001b[0m");
+                rl.close();
                 socket.end();
                 return;
             }      
@@ -172,6 +173,12 @@ async function login(username, password)
 
         })
 
+        eventEmitter.once("failure", args=>{
+            let errorMessage = args[2].find(o=>o.name == "text")?.content;
+            console.error("\u001b[31m"+errorMessage+"\u001b[0m");
+            rl.close();
+            socket.end();
+        });
 
         socket.write(message2);
 
