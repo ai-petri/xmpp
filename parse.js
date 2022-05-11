@@ -32,6 +32,7 @@ function parseXML(buffer)
                     {
                         tags.pop();
                         tags.pop();
+                        currentObject = currentObject.parent;
                     }
                     else
                     {
@@ -49,13 +50,17 @@ function parseXML(buffer)
                         let parts = arr[i].split("=");
                         attributes[parts[0]] = parts[1].substring(1,parts[1].length -1);
                     }
-                    let obj = {name,attributes,children:[],content:""};
+                    let obj = {name,attributes,parent:currentObject,children:[],content:""};
                     objects.push(obj);
                     if(currentObject)
                     {
                         currentObject.children.push(obj);
                     }
-                    currentObject = obj;        
+                    currentObject = obj;
+                    if(currentTag.endsWith('/'))                        //self-closing tag
+                    {
+                        currentObject = currentObject.parent;
+                    }        
                 }
                 break;
             default:
