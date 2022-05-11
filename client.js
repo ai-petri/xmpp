@@ -1,17 +1,13 @@
 const net = require("net");
-const readline = require("readline");
 const events = require("events");
 const crypto = require("crypto");
 
-const {performance} = require('perf_hooks');
+
 
 const {parseXML, parseKeyValuePairs} = require("./parse");
-const { rejects } = require("assert");
 
 
-var username = "";
-var host = "";
-var port = 8080;
+
 var resource = "a";
 var friends = [];
 
@@ -22,7 +18,7 @@ var socket = new net.Socket();
 
 socket.on("connect", onConnect);
 socket.on("data", onData);
-socket.on("close", _=>console.log("\u001b[33mconnection closed\u001b[0m"));
+
 
 
 function onConnect()
@@ -50,54 +46,6 @@ eventEmitter.on("message", args=>
 
 });
 
-var rl = readline.createInterface({input:process.stdin, output:process.stdout});
-
-rl.on("line", str=>
-{
-
-    if(str.startsWith("/"))
-    {
-
-        let arr = str.split(" ").map(o=>o.trim());
-
-        let command = arr[0];
-
-        switch(command)
-        {
-            case "/quit":
-                rl.close();
-                socket.end();
-                break;
-            case "/connect":
-                
-                if(arr.length == 1 || !arr[1].match(/.+@.+/) )
-                {
-                    askForJid()                                     
-                }
-                else
-                {
-                    let parts = arr[1].split("@");
-                    username = parts[0];
-                    host = parts[1];
-                    if(arr.length > 3)
-                    {
-                        port = +arr[2];
-                    }
-                }
-                rl.question("password: ", password =>
-                {  
-                    socket.connect(port, host);
-                    login(username,password);
-                });
-                break;
-            case "/msg":
-                if(arr.length > 2)
-                {
-                    sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
-                }
-        }
-    }
-});
 
 
 async function login(username, password)
@@ -160,7 +108,7 @@ async function login(username, password)
             else
             {
                 console.error("\u001b[31msignature verification failed\u001b[0m");
-                rl.close();
+
                 socket.end();
                 return;
             }      
@@ -178,7 +126,7 @@ async function login(username, password)
         eventEmitter.once("failure", args=>{
             let errorMessage = args[2].find(o=>o.name == "text")?.content;
             console.error("\u001b[31m"+errorMessage+"\u001b[0m");
-            rl.close();
+
             socket.end();
         });
 
@@ -223,24 +171,7 @@ function bindResource(resource)
     })
 }
 
-function askForJid()
-{   
 
-    rl.question("jid: ", answer => 
-    {
-        if(!answer.match(/.+@.+/))
-        {
-            askForJid();
-        }
-        else
-        {
-            let parts = answer.trim().split("@");
-            username = parts[0];
-            host = parts[1];
-        }
-    });
-
-}
 
 
 function sendMessage(friend, message)
@@ -254,3 +185,6 @@ function sendMessage(friend, message)
     
    
 }
+
+
+module.exports = {socket, login, sendMessage};
