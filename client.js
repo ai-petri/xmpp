@@ -87,7 +87,7 @@ rl.on("line", str=>
                 rl.question("password: ", password =>
                 {  
                     socket.connect(port, host);
-                    eventEmitter.once("stream:stream", _=>login(username, password));
+                    login(username,password);
                 });
                 break;
             case "/msg":
@@ -103,6 +103,8 @@ rl.on("line", str=>
 async function login(username, password)
 {
     console.log("\u001b[33mlogging in as "+ username + "...\u001b[0m");
+
+    await new Promise(resolve => eventEmitter.once("stream:stream",resolve));
 
     var clientNonce = crypto.randomBytes(32).toString("hex");
 
