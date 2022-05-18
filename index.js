@@ -1,14 +1,10 @@
-const {socket, login, sendMessage} = require("./client");
+const {login, sendMessage} = require("./client");
 const http = require("http");
 const fs = require("fs");
 
 
 
 
-socket.on("close", _=>{
-    console.log("\u001b[33mconnection closed\u001b[0m");
-
-});
 
 
 var pendingResponse;
@@ -26,12 +22,19 @@ var server = http.createServer((req,res)=>
     {
         body += chunk.toString();
     })
-    
-    req.on("end",_=>processClientMessage(body));
 
-    if(requestUrl.searchParams.get("action") == 1)
+    let action = requestUrl.searchParams.get("action");
+
+    if(action)
     {
-        pendingResponse = res; 
+        
+
+        req.on("end",_=>processClientMessage(action, body)); 
+
+        if(action == "getMessage")
+        {
+            pendingResponse = res;
+        }
     }
     else
     {
@@ -60,7 +63,18 @@ var server = http.createServer((req,res)=>
 
 server.listen(80);
 
-function processClientMessage(message)
+function processClientMessage(action, body)
 {
-    console.log(message);
+    let obj = body.length>0 ? JSON.parse(body) : {};
+    console.log(obj);
+    switch(action)
+    {
+
+        case "login":
+            {
+                login(obj.jid, obj.password);
+
+            }
+        
+    }
 }
