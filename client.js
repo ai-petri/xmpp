@@ -203,5 +203,13 @@ function sendMessage(friend, message)
    
 }
 
+function disconnect()
+{
+    if(socket)
+    {
+        socket.end();
+    }
+}
 
-module.exports = {socket, login, sendMessage};
+
+module.exports = {login, sendMessage, disconnect};

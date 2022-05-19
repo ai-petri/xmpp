@@ -1,5 +1,5 @@
 const readline = require("readline");
-const {login, sendMessage} = require("./client");
+const {login, sendMessage, disconnect} = require("./client");
 
 
 var rl = readline.createInterface({input:process.stdin, output:process.stdout});
@@ -20,7 +20,7 @@ rl.on("line", async str=>
         switch(command)
         {
             case "/quit":
-
+                disconnect();
                 break;
 
             case "/connect":
