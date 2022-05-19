@@ -6,7 +6,9 @@ const crypto = require("crypto");
 
 const {parseXML, parseKeyValuePairs} = require("./parse");
 
-
+var username = "";
+var host = "";
+var port = 8080;
 
 var resource = "a";
 var friends = [];
@@ -14,10 +16,8 @@ var friends = [];
 
 var eventEmitter = new events.EventEmitter();
 
-var socket = new net.Socket();
+var socket;
 
-socket.on("connect", onConnect);
-socket.on("data", onData);
 
 
 
@@ -48,8 +48,25 @@ eventEmitter.on("message", args=>
 
 
 
-async function login(username, password)
+async function login(jid, password)
 {
+
+    [username, host] = jid.split("@");
+
+    socket = new net.Socket();
+
+    socket.on("connect", onConnect);
+    socket.on("data", onData);
+
+    socket.on("close", _=>{
+        console.log("\u001b[33mconnection closed\u001b[0m");
+        socket = undefined;
+    });
+
+    socket.connect(port, host);
+
+
+
     console.log("\u001b[33mlogging in as "+ username + "...\u001b[0m");
 
     await new Promise(resolve => eventEmitter.once("stream:stream",resolve));

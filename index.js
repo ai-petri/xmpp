@@ -1,16 +1,16 @@
 const readline = require("readline");
 const {socket, login, sendMessage} = require("./client");
 
-var port = 8080;
 
 var rl = readline.createInterface({input:process.stdin, output:process.stdout});
 
-socket.on("close", _=>{
-    rl.write("\u001b[33mconnection closed\u001b[0m");
-    rl.close();
-});
+// socket.on("close", _=>{
+//     rl.write("\u001b[33mconnection closed\u001b[0m");
+//     rl.close();
+// });
 
-rl.on("line", str=>
+
+rl.on("line", async str=>
 {
 
     if(str.startsWith("/"))
@@ -23,30 +23,31 @@ rl.on("line", str=>
         switch(command)
         {
             case "/quit":
-                socket.end();
+
                 break;
+
             case "/connect":
                 
-                if(arr.length == 1 || !arr[1].match(/.+@.+/) )
                 {
-                    askForJid()                                     
-                }
-                else
-                {
-                    let parts = arr[1].split("@");
-                    username = parts[0];
-                    host = parts[1];
-                    if(arr.length > 3)
+                    let jid;
+
+                    if(arr.length == 1 || !arr[1].match(/.+@.+/) )
                     {
-                        port = +arr[2];
+                        jid = await askForJid();
                     }
+                    else
+                    {
+                        jid = arr[1];
+                    }
+
+                    rl.question("password: ", password =>
+                    {                  
+                        login(jid,password);
+                    });   
                 }
-                rl.question("password: ", password =>
-                {  
-                    socket.connect(port, host);
-                    login(username,password);
-                });
+                            
                 break;
+
             case "/msg":
                 if(arr.length > 2)
                 {
@@ -58,19 +59,19 @@ rl.on("line", str=>
 
 function askForJid()
 {   
-
-    rl.question("jid: ", answer => 
+    return new Promise(resolve=>
     {
-        if(!answer.match(/.+@.+/))
+        rl.question("jid: ", answer => 
         {
-            askForJid();
-        }
-        else
-        {
-            let parts = answer.trim().split("@");
-            username = parts[0];
-            host = parts[1];
-        }
-    });
-
+            
+            if(!answer.match(/.+@.+/))
+            {
+                askForJid().then(resolve);
+            }
+            else
+            {
+                resolve(answer.trim());
+            }
+        });
+    })
 }
