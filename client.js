@@ -43,11 +43,13 @@ function Client()
 
     this.socket.on("close", _=>{
         console.log("\u001b[33mconnection closed\u001b[0m");
+        this.emit("close");
     });
 
 }
 
-
+Client.prototype = new events.EventEmitter();
+Client.prototype.constructor = Client;
 
 
 

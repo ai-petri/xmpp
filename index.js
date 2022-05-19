@@ -4,8 +4,9 @@ const Client = require("./client");
 
 var rl = readline.createInterface({input:process.stdin, output:process.stdout});
 
-const client = new Client();
+const client =  new Client();
 
+client.on("close", _=>rl.close());
 
 rl.on("line", async str=>
 {
