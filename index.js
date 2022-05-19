@@ -1,10 +1,10 @@
-const {login, sendMessage} = require("./client");
+const Client = require("./client");
 const http = require("http");
 const fs = require("fs");
 
 
 
-
+var client = new Client(); 
 
 
 var pendingResponse;
@@ -72,7 +72,7 @@ function processClientMessage(action, body)
 
         case "login":
             {
-                login(obj.jid, obj.password);
+                client.login(obj.jid, obj.password);
 
             }
         
