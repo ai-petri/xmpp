@@ -1,13 +1,10 @@
 const readline = require("readline");
-const {socket, login, sendMessage} = require("./client");
+const {login, sendMessage} = require("./client");
 
 
 var rl = readline.createInterface({input:process.stdin, output:process.stdout});
 
-// socket.on("close", _=>{
-//     rl.write("\u001b[33mconnection closed\u001b[0m");
-//     rl.close();
-// });
+
 
 
 rl.on("line", async str=>
