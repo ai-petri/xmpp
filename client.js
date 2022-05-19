@@ -6,78 +6,73 @@ const crypto = require("crypto");
 
 const {parseXML, parseKeyValuePairs} = require("./parse");
 
-var username = "";
-var host = "";
-var port = 8080;
-
-var resource = "a";
-var friends = [];
-
-
-var eventEmitter = new events.EventEmitter();
-
-var socket;
-
-
-
-
-function onConnect()
+function Client()
 {
-    console.log("\u001b[33mconnected\u001b[0m");
-    socket.write(Buffer.from(`<stream:stream xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams" version="1.0" to="${host}">`));
-}
+    this.username = "";
+    this.host = "";
+    this.port = 8080;
+    this.resource = "a";
+    this.friends = [];
+    this.eventEmitter = new events.EventEmitter();
 
-function onData(chunk)
-{
-    var objects = parseXML(chunk);
 
-    for(let {name, attributes, content, children} of objects)
+    this.eventEmitter.on("message", args=>
     {
-        eventEmitter.emit(name, [attributes, content, children]);
-    }
+        console.log("\u001b[33m"+args[0].from + ": \u001b[35m" + args[2].filter(o=>o.name == "body")[0].content + "\u001b[0m");
 
-    //console.log(chunk.toString());
-    //console.log(objects);
-}
-
-eventEmitter.on("message", args=>
-{
-    console.log("\u001b[33m"+args[0].from + ": \u001b[35m" + args[2].filter(o=>o.name == "body")[0].content + "\u001b[0m");
-
-});
-
-
-
-async function login(jid, password)
-{
-
-    [username, host] = jid.split("@");
-
-    socket = new net.Socket();
-
-    socket.on("connect", onConnect);
-    socket.on("data", onData);
-
-    socket.on("close", _=>{
-        console.log("\u001b[33mconnection closed\u001b[0m");
-        socket = undefined;
     });
 
-    socket.connect(port, host);
+
+    this.socket = new net.Socket();
+
+    this.socket.on("connect", ()=>
+    {
+        console.log("\u001b[33mconnected\u001b[0m");
+        this.socket.write(Buffer.from(`<stream:stream xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams" version="1.0" to="${this.host}">`));
+    });
+
+    this.socket.on("data", (chunk) =>
+    {
+        var objects = parseXML(chunk);
+
+        for(let {name, attributes, content, children} of objects)
+        {
+            this.eventEmitter.emit(name, [attributes, content, children]);
+        }
+    });
+
+    this.socket.on("close", _=>{
+        console.log("\u001b[33mconnection closed\u001b[0m");
+    });
+
+}
 
 
 
-    console.log("\u001b[33mlogging in as "+ username + "...\u001b[0m");
 
-    await new Promise(resolve => eventEmitter.once("stream:stream",resolve));
+
+Client.prototype.login = async function(jid, password)
+{
+
+    [this.username, this.host] = jid.split("@");
+
+    
+
+    this.socket.connect(this.port, this.host);
+
+
+
+    console.log("\u001b[33mlogging in as "+ this.username + "...\u001b[0m");
+
+    await new Promise(resolve => this.eventEmitter.once("stream:stream",resolve));
 
     var clientNonce = crypto.randomBytes(32).toString("hex");
 
-    var str = `n,,n=${username},r=${clientNonce}`;
+    var str = `n,,n=${this.username},r=${clientNonce}`;
 
     var message = `<auth xmlns="urn:ietf:params:xml:ns:xmpp-sasl" mechanism="SCRAM-SHA-1">${Buffer.from(str).toString("base64")}</auth>`;
 
-    eventEmitter.once("challenge", async args=>
+    this.eventEmitter.once("challenge", async args=>
     {
         let challenge = args[1];
         let decoded = Buffer.from(challenge,"base64").toString();
@@ -110,7 +105,7 @@ async function login(jid, password)
   
         let message2 = `<response xmlns="urn:ietf:params:xml:ns:xmpp-sasl">${Buffer.from(response).toString("base64")}</response>`;
 
-        eventEmitter.once("success", async args=>
+        this.eventEmitter.once("success", async args=>
         {
             let {v} = parseKeyValuePairs(Buffer.from(args[1],"base64").toString())
             
@@ -126,90 +121,90 @@ async function login(jid, password)
             {
                 console.error("\u001b[31msignature verification failed\u001b[0m");
 
-                socket.end();
+                this.socket.end();
                 return;
             }      
 
 
-            await startStream();
-            await bindResource(resource);
+            await this.startStream();
+            await this.bindResource(this.resource);
 
-            friends.push(`${username}@${host}/${resource}`);
+            this.friends.push(`${this.username}@${this.host}/${this.resource}`);
 
-            await startSession();
+            await this.startSession();
 
         })
 
-        eventEmitter.once("failure", args=>{
+        this.eventEmitter.once("failure", args=>{
             let errorMessage = args[2].find(o=>o.name == "text")?.content;
             console.error("\u001b[31m"+errorMessage+"\u001b[0m");
 
-            socket.end();
+            this.socket.end();
         });
 
-        socket.write(message2);
+        this.socket.write(message2);
 
     });
 
     
 
-    socket.write(message);
+    this.socket.write(message);
 }
 
 
 
-function startStream()
+Client.prototype.startStream = function()
 {
     var str = `<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`;
     return new Promise(resolve =>
     {
-        socket.once("data", resolve);
-        socket.write(Buffer.from(str));
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
     });
 }
 
-function startSession()
+Client.prototype.startSession = function()
 {
-    var str = `<iq to='${host}' type='set' id='sess_1'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>`;
+    var str = `<iq to='${this.host}' type='set' id='sess_1'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>`;
     return new Promise(resolve => 
     {
-        socket.once("data", resolve);
-        socket.write(Buffer.from(str));
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
     })
 }
 
-function bindResource(resource)
+Client.prototype.bindResource = function(resource)
 {
     var str = `<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>${resource}</resource></bind></iq>`;
     return new Promise(resolve => 
     {
-        socket.once("data", resolve);
-        socket.write(Buffer.from(str));
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
     })
 }
 
 
 
 
-function sendMessage(friend, message)
+Client.prototype.sendMessage = function(friend, message)
 {
 
-    friends.filter(o=>o.startsWith(friend)).forEach(address=>
+    this.friends.filter(o=>o.startsWith(friend)).forEach(address=>
     {
         let msg = `<message id="msg_1" to="${address}" type="chat"><body>${message}</body></message>`;
-        socket.write(Buffer.from(msg));
+        this.socket.write(Buffer.from(msg));
     })
     
    
 }
 
-function disconnect()
+Client.prototype.disconnect = function()
 {
-    if(socket)
+    if(this.socket)
     {
-        socket.end();
+        this.socket.end();
     }
 }
 
 
-module.exports = {login, sendMessage, disconnect};
+module.exports = Client;

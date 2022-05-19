@@ -1,10 +1,10 @@
 const readline = require("readline");
-const {login, sendMessage, disconnect} = require("./client");
+const Client = require("./client");
 
 
 var rl = readline.createInterface({input:process.stdin, output:process.stdout});
 
-
+const client = new Client();
 
 
 rl.on("line", async str=>
@@ -20,7 +20,7 @@ rl.on("line", async str=>
         switch(command)
         {
             case "/quit":
-                disconnect();
+                client.disconnect();
                 break;
 
             case "/connect":
@@ -39,7 +39,7 @@ rl.on("line", async str=>
 
                     rl.question("password: ", password =>
                     {                  
-                        login(jid,password);
+                        client.login(jid,password);
                     });   
                 }
                             
@@ -48,7 +48,7 @@ rl.on("line", async str=>
             case "/msg":
                 if(arr.length > 2)
                 {
-                    sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
+                    client.sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
                 }
         }
     }
