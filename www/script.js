@@ -9,7 +9,27 @@ form.addEventListener("submit", e =>
 
 
     fetch("/?action=login", {method: "POST", body:JSON.stringify({jid,password})})
-    .then(r=>r.text())
-    .then(console.log);
+    .then(r=>r.json())
+    .then(obj=>
+        {
+            if(obj.result && obj.result == "success")
+            {
+                document.querySelector("#login").classList.add("hidden");
+            }
+        });
     
-})
+});
+
+
+
+function getMessage()
+{
+    fetch("/?action=getMessage").then(r=>r.json()).then(obj=>{processMessage(obj); getMessage()});
+}
+
+function processMessage(obj)
+{
+    console.log(obj);
+}
+
+getMessage();

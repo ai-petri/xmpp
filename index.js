@@ -1,13 +1,16 @@
 const Client = require("./client");
 const http = require("http");
 const fs = require("fs");
+const { inherits } = require("util");
 
 
 
-var client = new Client(); 
 
-
+var client; 
 var pendingResponse;
+
+init();
+
 
 
 var server = http.createServer((req,res)=>
@@ -29,7 +32,7 @@ var server = http.createServer((req,res)=>
     {
         
 
-        req.on("end",_=>processClientMessage(action, body)); 
+        req.on("end",_=>processClientMessage(action, body, res)); 
 
         if(action == "getMessage")
         {
@@ -63,7 +66,25 @@ var server = http.createServer((req,res)=>
 
 server.listen(80);
 
-function processClientMessage(action, body)
+function init()
+{
+    client = new Client();
+
+    client.on("error", errorMessage=>
+    {
+        if(pendingResponse && !pendingResponse.writableEnded)
+        {
+            pendingResponse.end(JSON.stringify({type:"error", errorMessage}));
+        }
+    });
+
+    client.on("close", _=>
+    {
+        init();
+    })
+}
+
+function processClientMessage(action, body, response)
 {
     let obj = body.length>0 ? JSON.parse(body) : {};
     console.log(obj);
@@ -73,6 +94,10 @@ function processClientMessage(action, body)
         case "login":
             {
                 client.login(obj.jid, obj.password);
+                client.once("login", username=>
+                {
+                    response.end(JSON.stringify({result:"success", username}));
+                })
 
             }
         
