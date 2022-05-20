@@ -118,6 +118,7 @@ Client.prototype.login = async function(jid, password)
             if(v == serverSignature.toString("base64"))
             {
                 console.log("\u001b[32msuccess!\u001b[0m");
+                this.emit("login", this.username);
             }
             else
             {
@@ -140,7 +141,7 @@ Client.prototype.login = async function(jid, password)
         this.eventEmitter.once("failure", args=>{
             let errorMessage = args[2].find(o=>o.name == "text")?.content;
             console.error("\u001b[31m"+errorMessage+"\u001b[0m");
-
+            this.emit("error", errorMessage);
             this.socket.end();
         });
 
