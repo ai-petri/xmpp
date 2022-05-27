@@ -17,9 +17,14 @@ function Client()
 
     this.eventEmitter.on("message", args=>
     {
+        if(args[2].filter(o=>o.name == "body").length>0)
         console.log("\u001b[33m"+args[0].from + ": \u001b[35m" + args[2].filter(o=>o.name == "body")[0].content + "\u001b[0m");
-
     });
+
+    this.eventEmitter.on("error", args=>
+    {
+        console.log(args[2].filter(o=>o.name == "text")[0].content);
+    })
 
 
     this.socket = new net.Socket();
