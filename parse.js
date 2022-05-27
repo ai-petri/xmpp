@@ -48,7 +48,7 @@ function parseXML(buffer)
                     for(let i=1; i<arr.length; i++)
                     {
                         let parts = arr[i].split("=");
-                        attributes[parts[0]] = parts[1].substring(1,parts[1].length -1);
+                        attributes[parts[0]] = parts[1].substring(1,parts[1].length -2);
                     }
                     let obj = {name,attributes,parent:currentObject,children:[],content:""};
                     objects.push(obj);
