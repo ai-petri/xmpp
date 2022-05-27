@@ -15,6 +15,7 @@ form.addEventListener("submit", e =>
             if(obj.result && obj.result == "success")
             {
                 document.querySelector("#login").classList.add("hidden");
+                document.querySelector("#container").classList.remove("hidden");
             }
         });
     
