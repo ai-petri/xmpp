@@ -182,6 +182,35 @@ Client.prototype.bindResource = function(resource)
     })
 }
 
+Client.prototype.roster = function()
+{
+    var str = `<iq id="1234" type="get"><query xmlns='jabber:iq:roster'/></iq>`;
+    return new Promise(resolve =>
+    {
+        this.socket.once("data", o=>resolve(parseXML(o.toString()).filter(o=>o.name == "item").map(o=>o.attributes.jid)));
+        this.socket.write(Buffer.from(str));
+    })
+}
+
+Client.prototype.rosterAdd = function(jid)
+{
+    var str = `<iq id="1234" type="set"><query xmlns='jabber:iq:roster'><item jid="${jid}"/></query></iq>`;
+    return new Promise(resolve =>
+    {
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
+    })
+}
+
+Client.prototype.rosterRemove = function(jid)
+{
+    var str = `<iq id="1234" type="set"><query xmlns='jabber:iq:roster'><item subscription="remove" jid="${jid}"/></query></iq>`;
+    return new Promise(resolve =>
+    {
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
+    })
+}
 
 
 

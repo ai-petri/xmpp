@@ -51,6 +51,26 @@ rl.on("line", async str=>
                 {
                     client.sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
                 }
+                break;
+            
+            case "/roster":
+                if(arr.length == 1)
+                {
+                    console.log(await client.roster());
+                }
+                else if(arr.length == 3)
+                {
+                    if(arr[1] == "add")
+                    {
+                        client.rosterAdd(arr[2]);
+                    }
+                    else if(arr[1] == "remove")
+                    {
+                        client.rosterRemove(arr[2]);
+                    }
+                }
+                
+            
         }
     }
 });
