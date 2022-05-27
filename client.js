@@ -12,7 +12,6 @@ function Client()
     this.host = "";
     this.port = 8080;
     this.resource = "a";
-    this.friends = [];
     this.eventEmitter = new events.EventEmitter();
 
 
@@ -131,9 +130,6 @@ Client.prototype.login = async function(jid, password)
 
             await this.startStream();
             await this.bindResource(this.resource);
-
-            this.friends.push(`${this.username}@${this.host}/${this.resource}`);
-
             await this.startSession();
 
         })
@@ -189,16 +185,10 @@ Client.prototype.bindResource = function(resource)
 
 
 
-Client.prototype.sendMessage = function(friend, message)
+Client.prototype.sendMessage = function(address, message)
 {
-
-    this.friends.filter(o=>o.startsWith(friend)).forEach(address=>
-    {
-        let msg = `<message id="msg_1" to="${address}" type="chat"><body>${message}</body></message>`;
-        this.socket.write(Buffer.from(msg));
-    })
-    
-   
+    let msg = `<message id="msg_1" to="${address}" type="chat"><body>${message}</body></message>`;
+    this.socket.write(Buffer.from(msg));
 }
 
 Client.prototype.disconnect = function()
