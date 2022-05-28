@@ -26,6 +26,11 @@ function Client()
         console.log(args[2].filter(o=>o.name == "text")[0].content);
     })
 
+    this.eventEmitter.once("failure", args=>{
+        let errorMessage = args[2].find(o=>o.name == "text")?.content || args[2][0]?.name;
+        console.error("\u001b[31m"+errorMessage+"\u001b[0m");
+        this.socket.end();
+    });
 
     this.socket = new net.Socket();
 
@@ -139,12 +144,7 @@ Client.prototype.login = async function(jid, password)
 
         })
 
-        this.eventEmitter.once("failure", args=>{
-            let errorMessage = args[2].find(o=>o.name == "text")?.content;
-            console.error("\u001b[31m"+errorMessage+"\u001b[0m");
-            this.emit("error", errorMessage);
-            this.socket.end();
-        });
+        
 
         this.socket.write(message2);
 
