@@ -11,7 +11,7 @@ function Client()
 {
     this.username = "";
     this.host = "";
-    this.port = 8080;
+    this.port = 5222;
     this.resource = "a";
     this.eventEmitter = new events.EventEmitter();
 
