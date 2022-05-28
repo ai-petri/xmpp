@@ -1,6 +1,7 @@
 const net = require("net");
 const events = require("events");
 const crypto = require("crypto");
+const tls = require("tls");
 
 
 
@@ -76,6 +77,8 @@ Client.prototype.login = async function(jid, password)
     console.log("\u001b[33mlogging in as "+ this.username + "...\u001b[0m");
 
     await new Promise(resolve => this.eventEmitter.once("stream:stream",resolve));
+
+    await this.startTLS();
 
     var clientNonce = crypto.randomBytes(32).toString("hex");
 
@@ -155,7 +158,27 @@ Client.prototype.login = async function(jid, password)
     this.socket.write(message);
 }
 
+Client.prototype.startTLS = async function()
+{
+    this.socket.write("<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>");
 
+    await new Promise(resolve => this.eventEmitter.once("proceed",resolve));
+
+    await new Promise(resolve => this.socket = tls.connect({socket:this.socket}, resolve));
+    
+    this.socket.on("data", (chunk) =>
+    {
+        var objects = parseXML(chunk);
+
+        for(let {name, attributes, content, children} of objects)
+        {
+            this.eventEmitter.emit(name, [attributes, content, children]);
+        }
+    });
+
+    this.socket.write(Buffer.from(`<stream:stream xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams" version="1.0" to="${this.host}">`));
+    
+}
 
 Client.prototype.startStream = function()
 {
