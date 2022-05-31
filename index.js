@@ -100,6 +100,12 @@ function processClientMessage(action, body, response)
                 })
 
             }
+            break;
+
+        case "getRoster":
+            {
+                client.roster().then(o=>response.end(JSON.stringify(o)));
+            }
         
     }
 }

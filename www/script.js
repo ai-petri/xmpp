@@ -16,12 +16,26 @@ form.addEventListener("submit", e =>
             {
                 document.querySelector("#login").classList.add("hidden");
                 document.querySelector("#container").classList.remove("hidden");
+                updateRoster();
             }
         });
     
 });
 
-
+function updateRoster()
+{
+    fetch("/?action=getRoster").then(r=>r.json()).then(arr=>
+    {
+        let ul = document.querySelector("#roster>ul");
+        ul.innerHTML = "";
+        for(let jid of arr)
+        {
+            let li = document.createElement("li");
+            li.innerText = jid;
+            ul.append(li);
+        }
+    });
+}
 
 function getMessage()
 {

@@ -23,6 +23,15 @@
     grid-row: 1/3;
     grid-column: 1;
 }
+#roster>ul
+{
+    list-style: none;
+}
+#roster>ul>li
+{
+    cursor: pointer;
+    margin-top: 5px;
+}
 #messages
 {
     border: 1px solid black;
