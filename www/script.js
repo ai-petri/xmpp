@@ -34,8 +34,9 @@ sendButton.addEventListener("click", e =>
 
 function updateRoster()
 {
-    fetch("/?action=getRoster").then(r=>r.json()).then(arr=>
+    fetch("/?action=getRoster").then(r=>r.json()).then(obj=>
     {
+        let arr = obj.roster;
         let ul = document.querySelector("#roster>ul");
         ul.innerHTML = "";
         for(let jid of arr)

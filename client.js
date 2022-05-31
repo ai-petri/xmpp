@@ -55,6 +55,9 @@ Client.prototype.constructor = Client;
 Client.prototype.login = async function(jid, password)
 {
 
+    if (this.socket.remoteAddress) return;
+    
+
     [this.username, this.host] = jid.split("@");
 
     

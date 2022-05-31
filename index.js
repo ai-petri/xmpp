@@ -1,7 +1,6 @@
 const Client = require("./client");
 const http = require("http");
 const fs = require("fs");
-const { inherits } = require("util");
 
 
 
@@ -9,7 +8,7 @@ const { inherits } = require("util");
 var client; 
 var pendingResponse;
 
-init();
+
 
 
 
@@ -80,7 +79,7 @@ function init()
 
     client.on("close", _=>
     {
-        init();
+        client = undefined;
     })
 }
 
@@ -93,6 +92,7 @@ function processClientMessage(action, body, response)
 
         case "login":
             {
+                init();
                 client.login(obj.jid, obj.password);
                 client.once("login", username=>
                 {
@@ -104,13 +104,21 @@ function processClientMessage(action, body, response)
 
         case "getRoster":
             {
-                client.roster().then(o=>response.end(JSON.stringify(o)));
+                if(client)
+                {
+                    client.roster().then(o=>response.end(JSON.stringify({status: "OK", roster: o})));
+                }
+                else
+                {
+                    response.end(JSON.stringify({status: "error", roster: []}));
+                }
+                
             }
             break;
 
         case "sendMessage":
             {
-                if(obj.to && obj.text)
+                if(client && obj.to && obj.text)
                 {
                     client.sendMessage(obj.to, obj.text);
                     response.end(JSON.stringify({status: "OK"}));
