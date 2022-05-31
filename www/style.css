@@ -37,6 +37,8 @@
     border: 1px solid black;
     grid-row: 1;
     grid-column: 2/4;
+    padding: 5px;
+    overflow: auto;
 }
 #message_input
 {
@@ -66,3 +68,7 @@ form
     display: none !important;
 }
 
+.message>p
+{
+    margin-top: 0;
+}

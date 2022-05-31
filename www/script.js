@@ -2,6 +2,7 @@ var current = "";
 var form = document.querySelector("form");
 var sendButton = document.querySelector("#send_button");
 var messageInput = document.querySelector("#message_input");
+var messages = document.querySelector("#messages");
 
 form.addEventListener("submit", e =>
 {
@@ -56,7 +57,15 @@ function getMessage()
 
 function processMessage(obj)
 {
-    console.log(obj);
+    
+    var date = new Date();
+    var div = document.createElement("div");
+    div.classList.add("message");
+    div.innerHTML = `<b>${obj.from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
+    var p = document.createElement("p");
+    p.innerText = obj.text;
+    div.append(p);
+    messages.append(div);
 }
 
 function sendMessage(message)
