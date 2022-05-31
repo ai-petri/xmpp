@@ -1,4 +1,7 @@
+var current = "";
 var form = document.querySelector("form");
+var sendButton = document.querySelector("#send_button");
+var messageInput = document.querySelector("#message_input");
 
 form.addEventListener("submit", e =>
 {
@@ -22,6 +25,13 @@ form.addEventListener("submit", e =>
     
 });
 
+sendButton.addEventListener("click", e => 
+{
+    sendMessage(messageInput.value);
+    messageInput.value = "";
+});
+
+
 function updateRoster()
 {
     fetch("/?action=getRoster").then(r=>r.json()).then(arr=>
@@ -32,6 +42,7 @@ function updateRoster()
         {
             let li = document.createElement("li");
             li.innerText = jid;
+            li.onclick =  _=> current = jid; 
             ul.append(li);
         }
     });
@@ -45,6 +56,17 @@ function getMessage()
 function processMessage(obj)
 {
     console.log(obj);
+}
+
+function sendMessage(message)
+{
+    fetch("/?action=sendMessage", {method:"POST", body: JSON.stringify({to:current, text:message})}).then(r=>r.json()).then(obj=>
+    {
+        if(obj.status == "OK")
+        {
+            processMessage({from:"me", text: message});
+        }
+    });
 }
 
 getMessage();

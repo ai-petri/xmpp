@@ -106,6 +106,21 @@ function processClientMessage(action, body, response)
             {
                 client.roster().then(o=>response.end(JSON.stringify(o)));
             }
+            break;
+
+        case "sendMessage":
+            {
+                if(obj.to && obj.text)
+                {
+                    client.sendMessage(obj.to, obj.text);
+                    response.end(JSON.stringify({status: "OK"}));
+                }
+                else
+                {
+                    response.end(JSON.stringify({status: "error"}));
+                }
+                
+            }
         
     }
 }
