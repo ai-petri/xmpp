@@ -138,6 +138,19 @@ function processClientMessage(action, body, response)
                 }
                 
             }
+            break;
+        case "sendPresence":
+            {
+                if(client)
+                {
+                    client.sendPresence();
+                    response.end(JSON.stringify({status: "OK"}));
+                }
+                else
+                {
+                    response.end(JSON.stringify({status: "error"}));
+                }
+            }
         
     }
 }

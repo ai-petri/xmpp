@@ -236,6 +236,15 @@ Client.prototype.rosterRemove = function(jid)
     })
 }
 
+Client.prototype.sendPresence = function()
+{
+    var str = "<presence />"
+    return new Promise(resolve =>
+    {
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
+    })
+}
 
 Client.prototype.sendMessage = function(address, message)
 {
