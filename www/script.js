@@ -20,6 +20,8 @@ form.addEventListener("submit", e =>
             {
                 document.querySelector("#login").classList.add("hidden");
                 document.querySelector("#container").classList.remove("hidden");
+                updateRoster();
+                sendPresence();
             }
         });
     

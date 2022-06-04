@@ -17,7 +17,7 @@ function Client()
 
     this.eventEmitter.on("message", args=>
     {
-        this.emit("message", {from: args[0].from, text: args[2].filter(o=>o.name == "body")[0].content});
+        this.emit("message", {from: args[0].from, text: args[2].filter(o=>o.name == "body")[0]?.content});
     });
 
 
@@ -121,6 +121,9 @@ Client.prototype.login = async function(jid, password)
             if(v == serverSignature.toString("base64"))
             {
                 console.log("\u001b[32msuccess!\u001b[0m");
+                await this.startStream();
+                await this.bindResource(this.resource);
+                await this.startSession();
                 this.emit("login", this.username);
             }
             else
@@ -129,12 +132,7 @@ Client.prototype.login = async function(jid, password)
 
                 this.socket.end();
                 return;
-            }      
-
-
-            await this.startStream();
-            await this.bindResource(this.resource);
-            await this.startSession();
+            }            
 
         })
 
@@ -181,7 +179,7 @@ Client.prototype.startStream = function()
     var str = `<?xml version="1.0"?><stream:stream to="localhost" xml:lang="en" version="1.0" xmlns="jabber:client" xmlns:stream="http://etherx.jabber.org/streams">`;
     return new Promise(resolve =>
     {
-        this.socket.once("data", resolve);
+        this.eventEmitter.once("stream:stream", resolve);
         this.socket.write(Buffer.from(str));
     });
 }
@@ -191,7 +189,7 @@ Client.prototype.startSession = function()
     var str = `<iq to='${this.host}' type='set' id='sess_1'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>`;
     return new Promise(resolve => 
     {
-        this.socket.once("data", resolve);
+        this.eventEmitter.once("iq", resolve);
         this.socket.write(Buffer.from(str));
     })
 }
@@ -201,7 +199,7 @@ Client.prototype.bindResource = function(resource)
     var str = `<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>${resource}</resource></bind></iq>`;
     return new Promise(resolve => 
     {
-        this.socket.once("data", resolve);
+        this.eventEmitter.once("iq", resolve);
         this.socket.write(Buffer.from(str));
     })
 }
@@ -211,7 +209,10 @@ Client.prototype.roster = function()
     var str = `<iq id="1234" type="get"><query xmlns='jabber:iq:roster'/></iq>`;
     return new Promise(resolve =>
     {
-        this.socket.once("data", o=>resolve(parseXML(o.toString()).filter(o=>o.name == "item").map(o=>o.attributes.jid)));
+        this.eventEmitter.once("iq", ([attributes,content,children])=>
+        {
+            resolve(children.filter(o=>o.name == "query")[0]?.children.map(o=>o.attributes.jid));
+        });
         this.socket.write(Buffer.from(str));
     })
 }
