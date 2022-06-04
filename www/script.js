@@ -17,6 +17,7 @@ var messages =
         p.innerText = text;
         div.append(p);
         this.el.append(div);
+        this.el.scrollTop = this.el.scrollHeight;
     }
 }
 
