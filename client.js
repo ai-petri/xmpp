@@ -21,6 +21,11 @@ function Client()
     });
 
 
+    this.eventEmitter.on("presence", args=>
+    {
+       this.emit("presence", {from: args[0].from, priority: args[2].filter(o=>o.name == "priority")[0]?.content, show: args[2].filter(o=>o.name == "show")[0]?.content});
+    })
+
     this.socket = new net.Socket();
 
     this.socket.on("connect", ()=>

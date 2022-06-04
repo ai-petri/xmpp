@@ -78,6 +78,14 @@ function init()
         }
     });
 
+    client.on("presence", presence=>
+    {
+        if(pendingResponse && !pendingResponse.writableEnded)
+        {
+            pendingResponse.end(JSON.stringify({type:"presence", ...presence}));
+        }
+    })
+
     client.on("error", errorMessage=>
     {
         if(pendingResponse && !pendingResponse.writableEnded)

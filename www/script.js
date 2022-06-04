@@ -63,17 +63,28 @@ function getMessage()
 
 function processMessage(obj)
 {
-    if(obj.type == "message")
+    switch(obj.type)
     {
-        let date = new Date();
-        let div = document.createElement("div");
-        div.classList.add("message");
-        div.innerHTML = `<b>${obj.from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
-        let p = document.createElement("p");
-        p.innerText = obj.text;
-        div.append(p);
-        messages.append(div);
+        case "message":
+        {
+            let date = new Date();
+            let div = document.createElement("div");
+            div.classList.add("message");
+            div.innerHTML = `<b>${obj.from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
+            let p = document.createElement("p");
+            p.innerText = obj.text;
+            div.append(p);
+            messages.append(div);
+        }
+        break;
+        case "presence":
+        console.log(obj);
+        break;
+        case "error":
+        console.log(obj);
     }
+    
+    
 }
 
 function sendMessage(message)
