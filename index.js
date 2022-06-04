@@ -137,7 +137,7 @@ function processClientMessage(action, body, response)
             {
                 if(client && obj.to && obj.text)
                 {
-                    client.sendMessage(obj.to, obj.text);
+                    obj.to.forEach(destination => client.sendMessage(destination, obj.text));
                     response.end(JSON.stringify({status: "OK"}));
                 }
                 else

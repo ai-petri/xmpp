@@ -1,8 +1,24 @@
 var current = "";
+var roster = new Map();
 var form = document.querySelector("form");
 var sendButton = document.querySelector("#send_button");
 var messageInput = document.querySelector("#message_input");
-var messages = document.querySelector("#messages");
+
+var messages = 
+{
+    el: document.querySelector("#messages"),
+    append(from, text)
+    {
+        let date = new Date();
+        let div = document.createElement("div");
+        div.classList.add("message");
+        div.innerHTML = `<b>${from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
+        let p = document.createElement("p");
+        p.innerText = text;
+        div.append(p);
+        this.el.append(div);
+    }
+}
 
 form.addEventListener("submit", e =>
 {
@@ -33,6 +49,14 @@ sendButton.addEventListener("click", e =>
     messageInput.value = "";
 });
 
+messageInput.addEventListener("keypress", e=>
+{
+    if(e.key == "Enter")
+    {
+        sendMessage(messageInput.value);
+        messageInput.value = "";
+    }
+});
 
 function updateRoster()
 {
@@ -41,8 +65,10 @@ function updateRoster()
         let arr = obj.roster;
         let ul = document.querySelector("#roster>ul");
         ul.innerHTML = "";
+        roster.clear();
         for(let jid of arr)
         {
+            roster.set(jid, new Set());
             let li = document.createElement("li");
             li.innerText = jid;
             li.onclick =  _=> current = jid; 
@@ -67,18 +93,25 @@ function processMessage(obj)
     {
         case "message":
         {
-            let date = new Date();
-            let div = document.createElement("div");
-            div.classList.add("message");
-            div.innerHTML = `<b>${obj.from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
-            let p = document.createElement("p");
-            p.innerText = obj.text;
-            div.append(p);
-            messages.append(div);
+            let [jid,resource] = obj.from.split("/");
+            if(resource !== "")
+            {
+                roster.get(jid)?.add(resource); 
+            }
+            if(obj.text)
+            {
+                messages.append(obj.from, obj.text);
+            }
         }
         break;
         case "presence":
-        console.log(obj);
+        {
+            let [jid,resource] = obj.from.split("/");
+            if(resource !== "")
+            {
+                roster.get(jid)?.add(resource); 
+            }
+        }
         break;
         case "error":
         console.log(obj);
@@ -89,11 +122,12 @@ function processMessage(obj)
 
 function sendMessage(message)
 {
-    fetch("/?action=sendMessage", {method:"POST", body: JSON.stringify({to:current, text:message})}).then(r=>r.json()).then(obj=>
+    var destinations = [...roster.get(current)].map(resource=>current+"/"+resource);
+    fetch("/?action=sendMessage", {method:"POST", body: JSON.stringify({to:destinations, text:message})}).then(r=>r.json()).then(obj=>
     {
         if(obj.status == "OK")
         {
-            processMessage({from:"me", text: message});
+            messages.append("me",message);
         }
     });
 }
