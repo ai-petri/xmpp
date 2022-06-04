@@ -1,6 +1,7 @@
 const Client = require("./client");
 const http = require("http");
 const fs = require("fs");
+const { type } = require("os");
 
 
 
@@ -68,6 +69,14 @@ server.listen(80);
 function init()
 {
     client = new Client();
+
+    client.on("message", message=>
+    {
+        if(pendingResponse && !pendingResponse.writableEnded)
+        {
+            pendingResponse.end(JSON.stringify({type:"message", from: message.from, text: message.text}));
+        }
+    });
 
     client.on("error", errorMessage=>
     {

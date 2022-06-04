@@ -17,8 +17,7 @@ function Client()
 
     this.eventEmitter.on("message", args=>
     {
-        console.log("\u001b[33m"+args[0].from + ": \u001b[35m" + args[2].filter(o=>o.name == "body")[0].content + "\u001b[0m");
-
+        this.emit("message", {from: args[0].from, text: args[2].filter(o=>o.name == "body")[0].content});
     });
 
 

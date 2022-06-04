@@ -57,15 +57,17 @@ function getMessage()
 
 function processMessage(obj)
 {
-    
-    var date = new Date();
-    var div = document.createElement("div");
-    div.classList.add("message");
-    div.innerHTML = `<b>${obj.from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
-    var p = document.createElement("p");
-    p.innerText = obj.text;
-    div.append(p);
-    messages.append(div);
+    if(obj.type == "message")
+    {
+        let date = new Date();
+        let div = document.createElement("div");
+        div.classList.add("message");
+        div.innerHTML = `<b>${obj.from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
+        let p = document.createElement("p");
+        p.innerText = obj.text;
+        div.append(p);
+        messages.append(div);
+    }
 }
 
 function sendMessage(message)
