@@ -11,6 +11,8 @@ var messages =
     {
         let date = new Date();
         let div = document.createElement("div");
+        let chat = from == "me" ? current : from.split("/")[0];
+        div.setAttribute("data-chat", chat);
         div.classList.add("message");
         div.innerHTML = `<b>${from} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}</b>`;
         let p = document.createElement("p");
@@ -18,7 +20,23 @@ var messages =
         div.append(p);
         this.el.append(div);
         this.el.scrollTop = this.el.scrollHeight;
+    },
+    show(chat)
+    {
+        document.querySelectorAll(".message").forEach(el=>
+        {
+            if(el.getAttribute("data-chat") == chat)
+            {
+                el.classList.remove("hidden");
+            }
+            else
+            {
+                el.classList.add("hidden");
+            }
+        })
+
     }
+    
 }
 
 form.addEventListener("submit", e =>
@@ -72,7 +90,7 @@ function updateRoster()
             roster.set(jid, new Set());
             let li = document.createElement("li");
             li.innerText = jid;
-            li.onclick =  _=> current = jid; 
+            li.onclick =  _=> {current = jid; messages.show(jid)}
             ul.append(li);
         }
     });
