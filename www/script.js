@@ -87,11 +87,27 @@ function updateRoster()
         roster.clear();
         for(let jid of arr)
         {
-            roster.set(jid, new Set());
+            
             let li = document.createElement("li");
             li.innerText = jid;
+            li.classList.add("offline");
             li.onclick =  _=> {current = jid; messages.show(jid)}
             ul.append(li);
+            roster.set(jid, 
+            {
+                el:li,
+                resources: new Set(),
+                setOnline(online){
+                    if(online)
+                    {
+                        this.el.classList.remove("offline");
+                    }
+                    else
+                    {
+                        this.el.classList.add("offline");
+                    }
+                }
+            });
         }
     });
 }
@@ -115,7 +131,9 @@ function processMessage(obj)
             let [jid,resource] = obj.from.split("/");
             if(resource !== "")
             {
-                roster.get(jid)?.add(resource); 
+                let user = roster.get(jid);
+                user?.resources.add(resource);
+                user?.setOnline(true);
             }
             if(obj.text)
             {
@@ -128,7 +146,9 @@ function processMessage(obj)
             let [jid,resource] = obj.from.split("/");
             if(resource !== "")
             {
-                roster.get(jid)?.add(resource); 
+                let user = roster.get(jid);
+                user?.resources.add(resource);
+                user?.setOnline(true); 
             }
         }
         break;
@@ -141,7 +161,9 @@ function processMessage(obj)
 
 function sendMessage(message)
 {
-    var destinations = [...roster.get(current)].map(resource=>current+"/"+resource);
+    var resources = roster.get(current)?.resources;
+    if(!resources) return;
+    var destinations = [...resources].map(resource=>current+"/"+resource);
     fetch("/?action=sendMessage", {method:"POST", body: JSON.stringify({to:destinations, text:message})}).then(r=>r.json()).then(obj=>
     {
         if(obj.status == "OK")

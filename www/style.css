@@ -72,3 +72,8 @@ form
 {
     margin-top: 0;
 }
+
+.offline
+{
+    color: grey;
+}
