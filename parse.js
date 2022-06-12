@@ -33,23 +33,82 @@ function parseXML(buffer)
                         tags.pop();
                         tags.pop();
                         currentObject = currentObject.parent;
-                    }
-                    else
-                    {
-                        console.error("err: opening tag not found");
-                    }                  
+                    }                
                 }
                 else
                 {
                     let currentTag = tags[tags.length - 1];
-                    let arr = currentTag.split(" ").map(o=>o.trim());
-                    let name = arr[0];
+                    let name = "";
                     let attributes = {};
-                    for(let i=1; i<arr.length; i++)
+                    let n = 0;
+                    let inQuotes = false;
+                    let attributeName = "";
+                    let attributeValue = "";
+                    let prevChar = "";
+                    for(let char of currentTag)
                     {
-                        let parts = arr[i].split("=");
-                        attributes[parts[0]] = parts[1].substring(1,parts[1].length -2);
+                        switch(char)
+                        {
+                            case '"':
+                                inQuotes = !inQuotes;
+                                break;
+
+                            case '\'':
+                                inQuotes = !inQuotes;
+                                break;
+
+                            case ' ':
+                                if(!inQuotes && prevChar !== ' ')
+                                {
+                                    if(n>0 && n%2 == 0)
+                                    {
+                                        attributes[attributeName] = attributeValue;
+                                        attributeName = "";
+                                        attributeValue = "";
+                                    }
+                                    n++;
+                                }
+                                else
+                                {
+                                    if(n%2 == 0)
+                                    {
+                                        attributeValue += char;
+                                    }
+                                }
+                                
+                                break;
+                            case '=':
+                                if(!inQuotes) n++;
+                                break;
+
+                            default:
+
+                                if(n == 0)
+                                {
+                                    name += char;        
+                                }
+                                else if(n%2 !== 0)
+                                {
+                                    attributeName += char;
+                                }
+                                else
+                                {
+                                    if(inQuotes)
+                                    {
+                                        attributeValue += char;
+                                    }        
+                                }
+   
+                        }
+                        prevChar = char;
                     }
+
+                    if(attributeName !== "")
+                    {
+                        attributes[attributeName] = attributeValue;
+                    }
+
+
                     let obj = {name,attributes,parent:currentObject,children:[],content:""};
                     objects.push(obj);
                     if(currentObject)
