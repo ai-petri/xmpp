@@ -143,13 +143,16 @@ function processMessage(obj)
         break;
         case "presence":
         {
-            let [jid,resource] = obj.from.split("/");
-            if(resource !== "")
+            if(obj.from)
             {
-                let user = roster.get(jid);
-                user?.resources.add(resource);
-                user?.setOnline(true); 
-            }
+                let [jid,resource] = obj.from.split("/");
+                if(resource !== "")
+                {
+                    let user = roster.get(jid);
+                    user?.resources.add(resource);
+                    user?.setOnline(true); 
+                }
+            }     
         }
         break;
         case "error":
