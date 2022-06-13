@@ -8,6 +8,37 @@ const client =  new Client();
 
 client.on("close", _=>rl.close());
 
+const roster = 
+{
+    m: new Map(),
+    add(jid)
+    {
+        let parts = jid.split("/");
+        
+        if(!this.m.has(parts[0]))
+        {
+            this.m.set(parts[0], new Set());
+        }
+        if(parts.length>1) 
+        {
+            this.m.get(parts[0]).add(parts[1]);
+        }
+    },
+    get(jid)
+    {
+       let resources = [...this.m.get(jid)];
+       return resources.map(r=>jid+"/"+r);
+    }
+
+}
+
+client.on("presence", ({from,priority,show})=>roster.add(from));
+client.on("message", msg=>
+{
+    console.log("\u001b[33m"+msg.from+": \u001b[35m"+msg.text+"\u001b[0m");
+    roster.add(msg.from);
+});
+
 rl.on("line", async str=>
 {
 
@@ -49,14 +80,23 @@ rl.on("line", async str=>
             case "/msg":
                 if(arr.length > 2)
                 {
-                    client.sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
+                    if(arr[1].indexOf("/")!== -1)
+                    {
+                        client.sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
+                    }
+                    else
+                    {
+                        roster.get(arr[1]).forEach(destination=>client.sendMessage(destination, str.replace(/^([^ ]+ ){2}/, "")));
+                    }                  
                 }
                 break;
             
             case "/roster":
                 if(arr.length == 1)
                 {
-                    console.log(await client.roster());
+                    let arr = await client.roster();
+                    console.log(arr);
+                    arr.forEach(roster.add);
                 }
                 else if(arr.length == 3)
                 {
