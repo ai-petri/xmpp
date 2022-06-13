@@ -99,7 +99,7 @@ rl.on("line", async str=>
                 {
                     let arr = await client.roster();
                     console.log(arr);
-                    arr.forEach(roster.add);
+                    arr.forEach(jid=>roster.add(jid));
                 }
                 else if(arr.length == 3)
                 {
