@@ -22,6 +22,11 @@ function Client()
         console.log("\u001b[33m"+args[0].from + ": \u001b[35m" + args[2].filter(o=>o.name == "body")[0].content + "\u001b[0m");
     });
 
+    this.eventEmitter.on("presence", args=>
+    {
+       this.emit("presence", {from: args[0].from, priority: args[2].filter(o=>o.name == "priority")[0]?.content, show: args[2].filter(o=>o.name == "show")[0]?.content});
+    })
+
     this.eventEmitter.on("error", args=>
     {
         console.log(args[2].filter(o=>o.name == "text")[0].content);
@@ -144,6 +149,7 @@ Client.prototype.login = async function(jid, password)
             await this.startStream();
             await this.bindResource(this.resource);
             await this.startSession();
+            await this.sendPresence();
 
         })
 
@@ -240,7 +246,15 @@ Client.prototype.rosterRemove = function(jid)
     })
 }
 
-
+Client.prototype.sendPresence = function()
+{
+    var str = "<presence />"
+    return new Promise(resolve =>
+    {
+        this.socket.once("data", resolve);
+        this.socket.write(Buffer.from(str));
+    })
+}
 
 Client.prototype.sendMessage = function(address, message)
 {   
