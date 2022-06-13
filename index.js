@@ -11,6 +11,7 @@ client.on("close", _=>rl.close());
 const roster = 
 {
     m: new Map(),
+    destinations: [],
     add(jid)
     {
         let parts = jid.split("/");
@@ -26,10 +27,17 @@ const roster =
     },
     get(jid)
     {
-       let resources = [...this.m.get(jid)];
-       return resources.map(r=>jid+"/"+r);
+        if (jid.indexOf("/") !== -1)
+        {
+            this.destinations = [jid];
+        }
+        else
+        {
+            let resources = [...this.m.get(jid)];
+            this.destinations = resources.map(r=>jid+"/"+r);
+        }
+        return this.destinations;
     }
-
 }
 
 client.on("presence", ({from,priority,show})=>roster.add(from));
@@ -80,14 +88,9 @@ rl.on("line", async str=>
             case "/msg":
                 if(arr.length > 2)
                 {
-                    if(arr[1].indexOf("/")!== -1)
-                    {
-                        client.sendMessage(arr[1], str.replace(/^([^ ]+ ){2}/, ""));
-                    }
-                    else
-                    {
-                        roster.get(arr[1]).forEach(destination=>client.sendMessage(destination, str.replace(/^([^ ]+ ){2}/, "")));
-                    }                  
+                    let message = str.replace(/^([^ ]+ ){2}/, "");
+                    let destinations = roster.get(arr[1]);
+                    destinations.forEach(destination=>client.sendMessage(destination, message));                  
                 }
                 break;
             
@@ -112,6 +115,10 @@ rl.on("line", async str=>
                 
             
         }
+    }
+    else
+    {
+        roster.destinations.forEach(destination=>client.sendMessage(destination, str));
     }
 });
 
