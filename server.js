@@ -6,7 +6,10 @@ const {parseXML, parseKeyValuePairs} = require("./parse");
 
 var clients = [];
 
-
+var password = "pass";
+var salt = crypto.randomBytes(32).toString("base64");
+var iterationsCount = 4096;
+var saltedPassword = crypto.pbkdf2Sync(password, salt, iterationsCount, 20, "sha1");
 
 var server = net.createServer(listener);
 
@@ -84,21 +87,43 @@ function createResponse(data, client)
                 {
                     let {n,r} = parseKeyValuePairs(Buffer.from(obj.content, "base64").toString());
                     client.username = n;
-                    client.nonce = r;
-                    let serverNonce = r + crypto.randomBytes(32).toString("base64");
-                    let salt = crypto.randomBytes(32).toString("base64");
-                    let iterationsCount = 4096;
-
-                    let challenge = `r=${serverNonce},s=${salt},i=${iterationsCount}`;
-                    result = `<challenge>${Buffer.from(challenge).toString("base64")}</challenge>`
+                    client.clientNonce = r;
+                    client.serverNonce = r + crypto.randomBytes(32).toString("base64");
+                    client.challenge = `r=${client.serverNonce},s=${salt},i=${iterationsCount}`;
+                    result = `<challenge>${Buffer.from(client.challenge).toString("base64")}</challenge>`
                 }
                 break;
             case "response":
                 {
-                    let o = parseKeyValuePairs(Buffer.from(obj.content,"base64").toString());
+                    let response = Buffer.from(obj.content,"base64").toString();
+                    let {c,r,p} = parseKeyValuePairs(response);
 
-                    console.log(o);
+                    client.proof = p;
 
+                    let clientKey = crypto.createHmac("sha1", saltedPassword).update("Client Key").digest();
+
+                    let storedKey = crypto.createHash("sha1").update(clientKey).digest();
+
+                    let authMessage = `n=${client.username},r=${client.clientNonce},${client.challenge},c=biws,r=${r}`;
+
+                    let clientSignature = crypto.createHmac("sha1", storedKey).update(authMessage).digest();
+
+                   
+
+                   let proof = clientKey.map((a,i)=>a ^ clientSignature[i]).toString("base64");
+
+                    if(proof == client.proof)
+                    {
+                        let serverKey = crypto.createHmac("sha1", saltedPassword).update("Server Key").digest();
+
+                        let serverSignature = crypto.createHmac("sha1", serverKey).update(authMessage).digest();
+
+                        result = `<success>${Buffer.from("v="+serverSignature.toString("base64")).toString("base64")}</success>`;
+                    }
+                    else
+                    {
+                        result = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><not-authorized/><text xml:lang='en'>Invalid username or password</text></failure>";
+                    }                 
 
                 }
                 break;
